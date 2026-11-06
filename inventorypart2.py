@@ -1,21 +1,50 @@
 from abc import ABC, abstractmethod
 
 # =====================================
-# Product Class
+# Supplier
+# =====================================
+class Supplier:
+
+    def __init__(
+        self,
+        supplier_id: str,
+        name: str,
+        contact_email: str
+    ):
+        self.supplier_id: str = supplier_id
+        self.name: str = name
+        self.contact_email: str = contact_email
+
+    def display_information(self) -> None:
+        print(f"Supplier ID: {self.supplier_id}")
+        print(f"Name: {self.name}")
+        print(f"Email: {self.contact_email}")
+
+
+# =====================================
+# Product
 # =====================================
 class Product(ABC):
-    def __init__(self, product_id: str, name: str, price: float):
-        self.product_id = product_id
-        self.name = name
-        self.price = price
 
-    def display_information(self):
-        print(f"Product ID : {self.product_id}")
-        print(f"Name       : {self.name}")
-        print(f"Price      : ${self.price:.2f}")
+    def __init__(
+        self,
+        product_id: str,
+        name: str,
+        price: float,
+        supplier: Supplier
+    ):
+        self.product_id: str = product_id
+        self.name: str = name
+        self.price: float = price
+        self.supplier: Supplier = supplier
+
+    def display_information(self) -> None:
+        print(f"ID: {self.product_id}")
+        print(f"Name: {self.name}")
+        print(f"Price: ${self.price:.2f}")
 
     @abstractmethod
-    def get_fulfilment_info(self):
+    def get_fulfilment_info(self) -> str:
         pass
 
 
@@ -23,53 +52,118 @@ class Product(ABC):
 # Physical Product
 # =====================================
 class PhysicalProduct(Product):
-    def __init__(self, product_id: str, name: str,
-                 price: float, weight: float):
-        super().__init__(product_id, name, price)
-        self.weight = weight
 
-    def get_fulfilment_info(self):
-        return "Requires physical shipping."
+    def __init__(
+        self,
+        product_id: str,
+        name: str,
+        price: float,
+        supplier: Supplier,
+        weight: float
+    ):
+        super().__init__(
+            product_id,
+            name,
+            price,
+            supplier
+        )
+
+        self.weight: float = weight
+
+    def get_fulfilment_info(self) -> str:
+        return "Physical shipping required"
 
 
 # =====================================
 # Digital Product
 # =====================================
 class DigitalProduct(Product):
-    def __init__(self, product_id: str, name: str,
-                 price: float, download_size: float):
-        super().__init__(product_id, name, price)
-        self.download_size = download_size
 
-    def get_fulfilment_info(self):
-        return "Delivered digitally."
+    def __init__(
+        self,
+        product_id: str,
+        name: str,
+        price: float,
+        supplier: Supplier,
+        download_size: float
+    ):
+        super().__init__(
+            product_id,
+            name,
+            price,
+            supplier
+        )
+
+        self.download_size: float = download_size
+
+    def get_fulfilment_info(self) -> str:
+        return "Digital download"
 
 
 # =====================================
-# OrderLine Class
+# Inventory
+# =====================================
+class Inventory:
+
+    def __init__(self):
+        self.products: list[Product] = []
+
+    def add_product(
+        self,
+        product: Product
+    ) -> None:
+        self.products.append(product)
+
+    def remove_product(
+        self,
+        product_id: str
+    ) -> bool:
+
+        for product in self.products:
+            if product.product_id == product_id:
+                self.products.remove(product)
+                return True
+
+        return False
+
+    def find_product(
+        self,
+        product_id: str
+    ) -> Product | None:
+
+        for product in self.products:
+            if product.product_id == product_id:
+                return product
+
+        return None
+
+
+# =====================================
+# OrderLine
 # =====================================
 class OrderLine:
 
-    def __init__(self, product: Product, quantity: int):
+    def __init__(
+        self,
+        product: Product,
+        quantity: int
+    ):
         self.product: Product = product
         self.quantity: int = quantity
 
     def calculate_subtotal(self) -> float:
         return self.product.price * self.quantity
 
-    def display_information(self):
-        print(
-            f"{self.product.name} x {self.quantity} "
-            f"= ${self.calculate_subtotal():.2f}"
-        )
-
 
 # =====================================
-# Order Class
+# Order
 # =====================================
 class Order:
 
-    def __init__(self, order_id: str):
+    def __init__(
+        self,
+        order_id: str
+    ):
         self.order_id: str = order_id
         self.order_lines: list[OrderLine] = []
 
@@ -86,56 +180,32 @@ class Order:
 
         self.order_lines.append(order_line)
 
-    def remove_order_line(
-        self,
-        product_id: str
-    ) -> bool:
-
-        for line in self.order_lines:
-            if line.product.product_id == product_id:
-                self.order_lines.remove(line)
-                return True
-
-        return False
-
     def calculate_total(self) -> float:
-        total = 0
+
+        total: float = 0.0
 
         for line in self.order_lines:
             total += line.calculate_subtotal()
 
         return total
 
-    def display_order(self):
-        print(f"\n===== ORDER {self.order_id} =====")
-
-        for line in self.order_lines:
-            line.display_information()
-
-        print(
-            f"Order Total = "
-            f"${self.calculate_total():.2f}"
-        )
-
 
 # =====================================
-# Test Composition
+# Testing
 # =====================================
 if __name__ == "__main__":
 
-    print("Prediction:")
-    print(
-        "If the same Product is added to "
-        "two Orders, there will be"
+    supplier = Supplier(
+        "S001",
+        "Tech Supplies",
+        "sales@techsupplies.com"
     )
-    print("2 OrderLine objects but only")
-    print("1 Product object.\n")
 
-    # Products
     laptop = PhysicalProduct(
         "P001",
-        "Gaming Laptop",
-        2000.00,
+        "Laptop",
+        1200.00,
+        supplier,
         2.5
     )
 
@@ -143,73 +213,18 @@ if __name__ == "__main__":
         "D001",
         "Python Course",
         99.99,
+        supplier,
         500
     )
 
-    # Order 1
-    order1 = Order("O001")
+    inventory = Inventory()
 
-    order1.add_order_line(
-        laptop,
-        2
-    )
+    inventory.add_product(laptop)
+    inventory.add_product(course)
 
-    order1.add_order_line(
-        course,
-        3
-    )
+    order = Order("O001")
 
-    order1.display_order()
+    order.add_order_line(laptop, 2)
+    order.add_order_line(course, 1)
 
-    # Order 2
-    order2 = Order("O002")
-
-    order2.add_order_line(
-        laptop,
-        1
-    )
-
-    order2.display_order()
-
-    print("\n===== OBJECT COMPARISON =====")
-
-    print(
-        "Same Product Object?"
-    )
-
-    print(
-        order1.order_lines[0].product
-        is
-        order2.order_lines[0].product
-    )
-
-    print(
-        "\nOrderLine Objects Same?"
-    )
-
-    print(
-        order1.order_lines[0]
-        is
-        order2.order_lines[0]
-    )
-
-    print("\nRemoving Laptop from Order 1")
-
-    order1.remove_order_line(
-        "P001"
-    )
-
-    order1.display_order()
-
-    print(
-        "\nOrder 2 still has its own "
-        "OrderLine:"
-    )
-
-    order2.display_order()
-
-    print(
-        "\nProduct still exists:"
-    )
-
-    laptop.display_information()
+    print(f"Order Total: ${order.calculate_total():.2f}")
