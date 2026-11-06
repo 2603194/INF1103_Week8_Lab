@@ -1,27 +1,6 @@
 from abc import ABC, abstractmethod
 
 # =====================================
-# Supplier
-# =====================================
-class Supplier:
-
-    def __init__(
-        self,
-        supplier_id: str,
-        name: str,
-        contact_email: str
-    ):
-        self.supplier_id: str = supplier_id
-        self.name: str = name
-        self.contact_email: str = contact_email
-
-    def display_information(self) -> None:
-        print(f"Supplier ID: {self.supplier_id}")
-        print(f"Name: {self.name}")
-        print(f"Email: {self.contact_email}")
-
-
-# =====================================
 # Product
 # =====================================
 class Product(ABC):
@@ -31,17 +10,24 @@ class Product(ABC):
         product_id: str,
         name: str,
         price: float,
-        supplier: Supplier
+        stock: int
     ):
-        self.product_id: str = product_id
-        self.name: str = name
-        self.price: float = price
-        self.supplier: Supplier = supplier
+        self.product_id = product_id
+        self.name = name
+        self.price = price
+        self.stock = stock
+
+    def update_stock(
+        self,
+        quantity: int
+    ) -> None:
+        self.stock += quantity
 
     def display_information(self) -> None:
         print(f"ID: {self.product_id}")
         print(f"Name: {self.name}")
         print(f"Price: ${self.price:.2f}")
+        print(f"Stock: {self.stock}")
 
     @abstractmethod
     def get_fulfilment_info(self) -> str:
@@ -58,20 +44,24 @@ class PhysicalProduct(Product):
         product_id: str,
         name: str,
         price: float,
-        supplier: Supplier,
+        stock: int,
         weight: float
     ):
         super().__init__(
             product_id,
             name,
             price,
-            supplier
+            stock
         )
 
-        self.weight: float = weight
+        self.weight = weight
+
+    def display_information(self) -> None:
+        super().display_information()
+        print(f"Weight: {self.weight}kg")
 
     def get_fulfilment_info(self) -> str:
-        return "Physical shipping required"
+        return "Requires physical shipping."
 
 
 # =====================================
@@ -84,20 +74,24 @@ class DigitalProduct(Product):
         product_id: str,
         name: str,
         price: float,
-        supplier: Supplier,
+        stock: int,
         download_size: float
     ):
         super().__init__(
             product_id,
             name,
             price,
-            supplier
+            stock
         )
 
-        self.download_size: float = download_size
+        self.download_size = download_size
+
+    def display_information(self) -> None:
+        super().display_information()
+        print(f"Download Size: {self.download_size}MB")
 
     def get_fulfilment_info(self) -> str:
-        return "Digital download"
+        return "Delivered digitally."
 
 
 # =====================================
@@ -114,117 +108,59 @@ class Inventory:
     ) -> None:
         self.products.append(product)
 
-    def remove_product(
-        self,
-        product_id: str
-    ) -> bool:
-
-        for product in self.products:
-            if product.product_id == product_id:
-                self.products.remove(product)
-                return True
-
-        return False
-
-    def find_product(
-        self,
-        product_id: str
-    ) -> Product | None:
-
-        for product in self.products:
-            if product.product_id == product_id:
-                return product
-
-        return None
-
-
-# =====================================
-# OrderLine
-# =====================================
-class OrderLine:
-
-    def __init__(
-        self,
-        product: Product,
-        quantity: int
-    ):
-        self.product: Product = product
-        self.quantity: int = quantity
-
-    def calculate_subtotal(self) -> float:
-        return self.product.price * self.quantity
-
-
-# =====================================
-# Order
-# =====================================
-class Order:
-
-    def __init__(
-        self,
-        order_id: str
-    ):
-        self.order_id: str = order_id
-        self.order_lines: list[OrderLine] = []
-
-    def add_order_line(
-        self,
-        product: Product,
-        quantity: int
+    def display_all_products(
+        self
     ) -> None:
 
-        order_line = OrderLine(
-            product,
-            quantity
-        )
+        print("\n===== INVENTORY =====")
 
-        self.order_lines.append(order_line)
-
-    def calculate_total(self) -> float:
-
-        total: float = 0.0
-
-        for line in self.order_lines:
-            total += line.calculate_subtotal()
-
-        return total
+        for product in self.products:
+            product.display_information()
+            print(product.get_fulfilment_info())
+            print("-" * 30)
 
 
 # =====================================
-# Testing
+# LSP Test Function
+# =====================================
+def show_product_details(
+    product: Product
+) -> None:
+
+    product.display_information()
+    print(product.get_fulfilment_info())
+    print("-" * 30)
+
+
+# =====================================
+# Test Program
 # =====================================
 if __name__ == "__main__":
 
-    supplier = Supplier(
-        "S001",
-        "Tech Supplies",
-        "sales@techsupplies.com"
-    )
-
-    laptop = PhysicalProduct(
+    physical = PhysicalProduct(
         "P001",
-        "Laptop",
-        1200.00,
-        supplier,
+        "Gaming Laptop",
+        2000.00,
+        10,
         2.5
     )
 
-    course = DigitalProduct(
+    digital = DigitalProduct(
         "D001",
         "Python Course",
         99.99,
-        supplier,
+        100,
         500
     )
 
+    print("===== LSP TEST =====")
+
+    show_product_details(physical)
+    show_product_details(digital)
+
     inventory = Inventory()
 
-    inventory.add_product(laptop)
-    inventory.add_product(course)
+    inventory.add_product(physical)
+    inventory.add_product(digital)
 
-    order = Order("O001")
-
-    order.add_order_line(laptop, 2)
-    order.add_order_line(course, 1)
-
-    print(f"Order Total: ${order.calculate_total():.2f}")
+    inventory.display_all_products()
