@@ -340,5 +340,48 @@ def main():
         else:
             print("Invalid choice.")
 
+    # =====================================
+    # Supplier Class
+    # =====================================
+    class Supplier:
+        def __init__(self, supplier_id, name, contact_email):
+            self.__supplier_id = supplier_id
+            self.__name = name
+            self.__contact_email = contact_email
 
+        def get_supplier_id(self):
+            return self.__supplier_id
+
+        def get_name(self):
+            return self.__name
+
+        def get_contact_email(self):
+            return self.__contact_email
+
+        def display_information(self):
+            print(f"Supplier ID   : {self.__supplier_id}")
+            print(f"Name          : {self.__name}")
+            print(f"Contact Email : {self.__contact_email}")
+
+    if __name__ == "__main__":
+
+        supplier1 = Supplier(
+        "S001",
+        "Tech Supplies Pte Ltd",
+        "sales@techsupplies.com"
+    )
+
+    product1 = PhysicalProduct(
+        1,
+        "Laptop",
+        1200.00,
+        10,
+        2.5
+    )
+
+    supplier1.display_information()
+    print()
+    product1.display_information()
+    
 main()
+
