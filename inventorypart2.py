@@ -1,48 +1,18 @@
 from abc import ABC, abstractmethod
 
 # =====================================
-# Supplier Class
-# =====================================
-class Supplier:
-    def __init__(self, supplier_id, name, contact_email):
-        self.__supplier_id = supplier_id
-        self.__name = name
-        self.__contact_email = contact_email
-
-    def get_supplier_id(self):
-        return self.__supplier_id
-
-    def get_name(self):
-        return self.__name
-
-    def get_contact_email(self):
-        return self.__contact_email
-
-    def display_information(self):
-        print(f"Supplier ID   : {self.__supplier_id}")
-        print(f"Name          : {self.__name}")
-        print(f"Contact Email : {self.__contact_email}")
-
-
-# =====================================
 # Product Class
 # =====================================
 class Product(ABC):
-    def __init__(self, product_id, name, price, stock_quantity, supplier: Supplier):
+    def __init__(self, product_id: str, name: str, price: float):
         self.product_id = product_id
         self.name = name
         self.price = price
-        self.stock_quantity = stock_quantity
-        self.supplier: Supplier = supplier
 
     def display_information(self):
         print(f"Product ID : {self.product_id}")
         print(f"Name       : {self.name}")
         print(f"Price      : ${self.price:.2f}")
-        print(f"Stock      : {self.stock_quantity}")
-
-    def display_supplier_information(self):
-        self.supplier.display_information()
 
     @abstractmethod
     def get_fulfilment_info(self):
@@ -53,15 +23,14 @@ class Product(ABC):
 # Physical Product
 # =====================================
 class PhysicalProduct(Product):
-    def __init__(self, product_id, name, price, stock_quantity,
-                 supplier, weight):
-        super().__init__(
-            product_id,
-            name,
-            price,
-            stock_quantity,
-            supplier
-        )
+    def __init__(
+        self,
+        product_id: str,
+        name: str,
+        price: float,
+        weight: float
+    ):
+        super().__init__(product_id, name, price)
         self.weight = weight
 
     def display_information(self):
@@ -69,22 +38,21 @@ class PhysicalProduct(Product):
         print(f"Weight     : {self.weight} kg")
 
     def get_fulfilment_info(self):
-        return "This product requires physical shipping."
+        return "Requires physical shipping."
 
 
 # =====================================
 # Digital Product
 # =====================================
 class DigitalProduct(Product):
-    def __init__(self, product_id, name, price, stock_quantity,
-                 supplier, download_size):
-        super().__init__(
-            product_id,
-            name,
-            price,
-            stock_quantity,
-            supplier
-        )
+    def __init__(
+        self,
+        product_id: str,
+        name: str,
+        price: float,
+        download_size: float
+    ):
+        super().__init__(product_id, name, price)
         self.download_size = download_size
 
     def display_information(self):
@@ -92,60 +60,90 @@ class DigitalProduct(Product):
         print(f"Download Size : {self.download_size} MB")
 
     def get_fulfilment_info(self):
-        return "This product is delivered digitally."
+        return "Delivered digitally."
 
 
 # =====================================
-# Test Association
+# Inventory Class (Aggregation)
+# =====================================
+class Inventory:
+
+    def __init__(self):
+        self.products: list[Product] = []
+
+    def add_product(self, product: Product):
+        self.products.append(product)
+
+    def remove_product(self, product_id: str):
+        for product in self.products:
+            if product.product_id == product_id:
+                self.products.remove(product)
+                return True
+        return False
+
+    def find_product(self, product_id: str) -> Product | None:
+        for product in self.products:
+            if product.product_id == product_id:
+                return product
+        return None
+
+    def display_products(self):
+        if not self.products:
+            print("Inventory is empty.")
+            return
+
+        for product in self.products:
+            product.display_information()
+            print(product.get_fulfilment_info())
+            print("-" * 30)
+
+
+# =====================================
+# Test Aggregation
 # =====================================
 if __name__ == "__main__":
 
-    supplier1 = Supplier(
-        "S001",
-        "Tech Supplies Pte Ltd",
-        "sales@techsupplies.com"
-    )
+    print("Prediction:")
+    print("The product should still work after being removed")
+    print("from an inventory because the inventory only")
+    print("stores a reference to the product object.\n")
 
-    physical_product = PhysicalProduct(
+    # Create Product BEFORE Inventory
+    product1 = PhysicalProduct(
         "P001",
         "Gaming Laptop",
         2000.00,
-        10,
-        supplier1,
         2.5
     )
 
-    digital_product = DigitalProduct(
-        "D001",
-        "Python Course",
-        99.99,
-        100,
-        supplier1,
-        5.0
-    )
+    # Create Inventory A
+    inventory_a = Inventory()
 
-    print("===== SUPPLIER =====")
-    supplier1.display_information()
+    print("Adding product to Inventory A...\n")
+    inventory_a.add_product(product1)
 
-    print("\n===== PHYSICAL PRODUCT =====")
-    physical_product.display_information()
+    inventory_a.display_products()
 
-    print("\nSupplier Information Through Product:")
-    physical_product.display_supplier_information()
+    print("\nRemoving product from Inventory A...\n")
+    inventory_a.remove_product("P001")
 
-    print("\n===== DIGITAL PRODUCT =====")
-    digital_product.display_information()
+    print("Inventory A Contents:")
+    inventory_a.display_products()
 
-    print("\nSupplier Information Through Product:")
-    digital_product.display_supplier_information()
+    print("\nProduct still exists:")
+    product1.display_information()
 
-    print("\nDeleting supplier variable...")
-    del supplier1
+    # Create Inventory B
+    inventory_b = Inventory()
 
-    print("\nSupplier still accessible through products:")
+    print("\nAdding same product to Inventory B...\n")
+    inventory_b.add_product(product1)
 
-    print("\nPhysical Product:")
-    physical_product.display_supplier_information()
+    print("Inventory B Contents:")
+    inventory_b.display_products()
 
-    print("\nDigital Product:")
-    digital_product.display_supplier_information()
+    print("\nConclusion:")
+    print("Removing a product from an inventory")
+    print("does not destroy the Product object.")
+    print("The product can still be used and")
+    print("added to another inventory.")
